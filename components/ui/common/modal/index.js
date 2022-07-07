@@ -1,9 +1,8 @@
 export default function Modal({ isOpen, children }) {
   return (
     <section>
-      {/* Remove hidden to display it */}
       <div
-        className={`${!isOpen && 'hidden'}fixed z-10 inset-0 overflow-y-auto`}
+        className={`${!isOpen && 'hidden'} fixed z-10 inset-0 overflow-y-auto`}
         aria-labelledby="modal-title"
         role="dialog"
         aria-modal="true"
@@ -15,7 +14,6 @@ export default function Modal({ isOpen, children }) {
               aria-hidden="true"
             ></div>
           )}
-
           <span
             className="hidden sm:inline-block sm:align-middle sm:h-screen"
             aria-hidden="true"
