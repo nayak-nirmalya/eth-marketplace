@@ -1,8 +1,7 @@
 import { useWeb3 } from '@components/provider'
-import Link from 'next/link'
-import Button from '../button'
 import { useAccount } from '@components/hooks/web3'
 import { useRouter } from 'next/router'
+import { ActiveLink, Button } from '@components/ui/common'
 
 export default function Navbar() {
   const { connect, isLoading, requireInstall } = useWeb3()
@@ -15,30 +14,30 @@ export default function Navbar() {
         <nav className="relative" aria-label="Global">
           <div className="flex justify-between items-center">
             <div>
-              <Link href="/">
+              <ActiveLink href="/">
                 <a className="font-medium mr-8 text-gray-500 hover:text-gray-900">
                   Home
                 </a>
-              </Link>
+              </ActiveLink>
 
-              <Link href="/marketplace">
+              <ActiveLink href="/marketplace">
                 <a className="font-medium mr-8 text-gray-500 hover:text-gray-900">
                   Marketplace
                 </a>
-              </Link>
+              </ActiveLink>
 
-              <Link href="/">
+              <ActiveLink href="/blogs">
                 <a className="font-medium mr-8 text-gray-500 hover:text-gray-900">
                   Blog
                 </a>
-              </Link>
+              </ActiveLink>
             </div>
             <div>
-              <Link href="/">
+              <ActiveLink href="/wishlist">
                 <a className="font-medium mr-8 text-gray-500 hover:text-gray-900">
                   Wishlist
                 </a>
-              </Link>
+              </ActiveLink>
 
               {isLoading ? (
                 <Button disabled={true} onClick={connect}>
@@ -47,7 +46,7 @@ export default function Navbar() {
               ) : account.data ? (
                 <Button
                   className="cursor-default"
-                  variant="red"
+                  // variant="red"
                   hoverable={false}
                 >
                   Hi, There! {account.isAdmin && 'Admin'}
