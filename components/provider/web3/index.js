@@ -12,14 +12,25 @@ import { setupHooks } from './hooks/setupHooks'
 
 const Web3Context = createContext(null)
 
+const createWeb3State = ({ web3, provider, contract, isLoading }) => {
+  return {
+    web3,
+    provider,
+    contract,
+    isLoading,
+    hooks: setupHooks({ web3, provider, contract }),
+  }
+}
+
 export default function Web3Provider({ children }) {
-  const [web3Api, setWeb3Api] = useState({
-    provider: null,
-    web3: null,
-    contract: null,
-    isLoading: true,
-    hooks: setupHooks(),
-  })
+  const [web3Api, setWeb3Api] = useState(
+    createWeb3State({
+      web3: null,
+      provider: null,
+      contract: null,
+      isLoading: true,
+    }),
+  )
 
   useEffect(() => {
     const loadProvider = async () => {
@@ -28,13 +39,9 @@ export default function Web3Provider({ children }) {
         const web3 = new Web3(provider)
         const contract = await loadContract('CourseMarketplace', web3)
 
-        setWeb3Api({
-          provider,
-          web3,
-          contract,
-          isLoading: false,
-          hooks: setupHooks(web3, provider),
-        })
+        setWeb3Api(
+          createWeb3State({ web3, provider, contract, isLoading: false }),
+        )
       } else {
         setWeb3Api((api) => ({ ...api, isLoading: false }))
         console.log('Please, Install Metamask.')
