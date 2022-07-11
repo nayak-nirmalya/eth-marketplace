@@ -10,15 +10,25 @@ export const handler = (web3, provider) => () => {
     () => (web3 ? 'web3/accounts' : null),
     async () => {
       const accounts = await web3.eth.getAccounts()
-      return accounts[0]
+      const account = accounts[0]
+
+      if (!account) {
+        throw new Error(
+          'Cannot retreive an account. Please refresh the browser.',
+        )
+      }
+
+      return account
     },
   )
 
   useEffect(() => {
-    provider &&
-      provider.on('accountsChanged', (accounts) => {
-        mutate(accounts[0] ?? null)
-      })
+    const mutator = (accounts) => mutate(accounts[0] ?? null)
+    provider?.on('accountsChanged', mutator)
+
+    return () => {
+      provider?.removeListener('accountsChanged', mutator)
+    }
   }, [provider])
 
   return {

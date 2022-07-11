@@ -13,21 +13,28 @@ const NETWORKS = {
 
 const targetNetwork = NETWORKS[process.env.NEXT_PUBLIC_TARGET_CHAIN_ID]
 
-export const handler = (web3, provier) => () => {
+export const handler = (web3, provider) => () => {
   const { data, mutate, ...rest } = useSWR(
     () => (web3 ? 'web3/network' : null),
     async () => {
       const chainId = await web3.eth.getChainId()
+
+      if (!chainId) {
+        throw new Error('Cannot retreive network. Please refresh the browser.')
+      }
+
       return NETWORKS[chainId]
     },
   )
 
   useEffect(() => {
-    provier &&
-      provier.on('chainChanged', (chainId) =>
-        mutate(NETWORKS[parseInt(chainId, 16)]),
-      )
-  }, [web3])
+    const mutator = (accounts) => mutate(NETWORKS[parseInt(chainId, 16)])
+    provider?.on('chainChanged', mutator)
+
+    return () => {
+      provider?.removeListener('chainChanged', mutator)
+    }
+  }, [provider])
 
   return {
     data,
