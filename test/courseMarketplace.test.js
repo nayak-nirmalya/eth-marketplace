@@ -1,10 +1,27 @@
 const CourseMarketplace = artifacts.require('CourseMarketplace')
 const { catchRevert } = require('./utils/exceptions')
 
+const getBalance = async (address) => await web3.eth.getBalance(address)
+const toBN = (value) => web3.utils.toBN(value)
+
+const getGas = async (result) => {
+  const tx = await web3.eth.getTransaction(result.tx)
+  const gasUsed = toBN(result.receipt.gasUsed)
+  const gasPrice = toBN(tx.gasPrice)
+  const gas = gasUsed.mul(gasPrice)
+
+  return gas
+}
+
 contract('CourseMarketplace', (accounts) => {
   const courseId = '0x00000000000000000000000000003130'
   const proof =
     '0x0000000000000000000000000000313000000000000000000000000000003130'
+
+  const courseId2 = '0x00000000000000000000000000002130'
+  const proof2 =
+    '0x0000000000000000000000000000213000000000000000000000000000002130'
+
   const value = '900000000'
 
   let _contract = null
@@ -107,6 +124,143 @@ contract('CourseMarketplace', (accounts) => {
       const owner = await _contract.getContractOwner()
 
       assert.equal(owner, contractOwner, 'contract owner transfer failed')
+    })
+  })
+
+  describe('deactivate course', () => {
+    let courseHash2 = null
+    let currentOwner = null
+
+    before(async () => {
+      await _contract.purchaseCourse(courseId2, proof2, { from: buyer, value })
+      courseHash2 = await _contract.getCourseHashAtIndex(1)
+      currentOwner = await _contract.getContractOwner()
+    })
+
+    it('should not be able to deactivate the course by NOT contract owner', async () => {
+      await catchRevert(
+        _contract.deactivateCourse(courseHash2, {
+          from: buyer,
+        }),
+      )
+    })
+
+    it('should have state of deactivated and price 0', async () => {
+      const beforeTxBuyerBalance = await getBalance(buyer)
+      const beforeTxContractBalance = await getBalance(_contract.address)
+      const beforeTxOwnerBalance = await getBalance(currentOwner)
+
+      const result = await _contract.deactivateCourse(courseHash2, {
+        from: contractOwner,
+      })
+
+      const afterTxBuyerBalance = await getBalance(buyer)
+      const afterTxContractBalance = await getBalance(_contract.address)
+      const afterTxOwnerBalance = await getBalance(currentOwner)
+
+      const course = await _contract.getCourseByHash(courseHash2)
+      const expectedState = 2
+      const expectedPrice = 0
+      const gas = await getGas(result)
+
+      assert.equal(course.state, expectedState, 'course is NOT deactivated')
+      assert.equal(course.price, expectedPrice, 'course price is NOT 0')
+
+      assert.equal(
+        toBN(beforeTxOwnerBalance).sub(gas).toString(),
+        afterTxOwnerBalance,
+        'contract owner balance is not correct',
+      )
+
+      assert.equal(
+        toBN(beforeTxBuyerBalance).add(toBN(value)).toString(),
+        afterTxBuyerBalance,
+        'buyer balance is not correct',
+      )
+
+      assert.equal(
+        toBN(beforeTxContractBalance).sub(toBN(value)).toString(),
+        afterTxContractBalance,
+        'contract balance is not correct',
+      )
+    })
+
+    it('should NOT be able to activate deactivated course', async () => {
+      await catchRevert(
+        _contract.activateCourse(courseHash2, {
+          from: contractOwner,
+        }),
+      )
+    })
+  })
+
+  describe('repurchase course', () => {
+    let courseHash2 = null
+
+    before(async () => {
+      courseHash2 = await _contract.getCourseHashAtIndex(1)
+    })
+
+    it('should NOT repurchase when the course does not exist', async () => {
+      const notExistingHash =
+        '0x5ceb3f8075c3dbb5d490c8d1e6c950302ed065e1a9031750ad2c6513069e3fc3'
+      await catchRevert(
+        _contract.repurchaseCourse(notExistingHash, {
+          from: buyer,
+        }),
+      )
+    })
+
+    it('should NOT repurchase with NOT course owner', async () => {
+      const notOwnerAddress = accounts[8]
+      await catchRevert(
+        _contract.repurchaseCourse(courseHash2, {
+          from: notOwnerAddress,
+        }),
+      )
+    })
+
+    it('should be able to repurchase with original buyer', async () => {
+      const beforeTxBuyerBalance = await getBalance(buyer)
+      const beforeTxContractBalance = await getBalance(_contract.address)
+      const result = await _contract.repurchaseCourse(courseHash2, {
+        from: buyer,
+        value,
+      })
+      const afterTxBuyerBalance = await getBalance(buyer)
+      const afterTxContractBalance = await getBalance(_contract.address)
+
+      const gas = await getGas(result)
+
+      const course = await _contract.getCourseByHash(courseHash2)
+      const expectedState = 0
+
+      assert.equal(
+        course.state,
+        expectedState,
+        'course is not in purchased state',
+      )
+      assert.equal(course.price, value, `course price is not equal to ${value}`)
+
+      assert.equal(
+        toBN(beforeTxBuyerBalance).sub(toBN(value)).sub(gas).toString(),
+        afterTxBuyerBalance,
+        'client balance is not correct!',
+      )
+
+      assert.equal(
+        toBN(beforeTxContractBalance).add(toBN(value)).toString(),
+        afterTxContractBalance,
+        'contract balance after TX is not correct!',
+      )
+    })
+
+    it('should NOT repurchase purchased course', async () => {
+      await catchRevert(
+        _contract.repurchaseCourse(courseHash2, {
+          from: buyer,
+        }),
+      )
     })
   })
 })
