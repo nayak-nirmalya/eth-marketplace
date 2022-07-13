@@ -1,6 +1,13 @@
+const SIZE = {
+  sm: 'p-2 text-base xs:px-4',
+  md: 'p-3 text-base xs:px-8',
+  lg: 'p-3 text-lg xs:px-8',
+}
+
 export default function Button({
   children,
   className,
+  size = 'md',
   hoverable = true,
   variant = 'purple',
   ...rest
@@ -14,10 +21,12 @@ export default function Button({
       hoverable && 'hover:bg-indigo-200'
     }`,
   }
+  const sizeClass = SIZE[size]
+
   return (
     <button
       {...rest}
-      className={`disabled:opacity-50 disabled:cursor-not-allowed xs:px-8 xs:py-3 p-2 border text-base font-medium ${className} ${variants[variant]} rounded-md`}
+      className={`${sizeClass} disabled:opacity-50 disabled:cursor-not-allowed border rounded-md font-medium ${className} ${variants[variant]}`}
     >
       {children}
     </button>
