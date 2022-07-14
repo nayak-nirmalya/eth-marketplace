@@ -4,7 +4,7 @@ import { Button } from '@components/ui/common'
 
 export default function WalletBar() {
   const { requireInstall } = useWeb3()
-  const { account, network, canPurchaseCourse } = useWalletInfo()
+  const { account, network } = useWalletInfo()
 
   return (
     <section className="text-white bg-indigo-600 rounded-lg">
@@ -33,7 +33,7 @@ export default function WalletBar() {
             )}
             {requireInstall && (
               <div className="bg-yellow-500 p-4 rounded-lg">
-                Can't connect to network. Please install Metamask!
+                Can&apos;t connect to network. Please install Metamask!
               </div>
             )}
             {network.data && (

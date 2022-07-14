@@ -1,9 +1,15 @@
 import { useState } from 'react'
 
-const TYPES = {
-  success: 'green',
-  warning: 'orange',
-  danger: 'red',
+const BG_CLASSES = {
+  success: 'bg-green-100',
+  warning: 'bg-orange-100',
+  danger: 'bg-red-100',
+}
+
+const TEXT_CLASSES = {
+  success: 'text-green-900',
+  warning: 'text-orange-900',
+  danger: 'text-red-900',
 }
 
 const SIZES = {
@@ -19,16 +25,15 @@ export default function Message({ children, type = 'success', size = 'md' }) {
     return null
   }
 
-  const messageType = TYPES[type]
   const messageSizeClass = SIZES[size]
 
   return (
-    <div className={`bg-${messageType}-100 rounded-xl mb-3`}>
+    <div className={`${BG_CLASSES[type]} rounded-xl mb-3`}>
       <div className="max-w-7xl mx-auto py-2 px-1">
         <div className="flex items-center justify-between flex-wrap">
           <div className="w-0 flex-1 flex items-center">
             <div
-              className={`ml-3 ${messageSizeClass} font-medium text-${messageType}-900 truncate`}
+              className={`ml-3 ${messageSizeClass} font-medium ${TEXT_CLASSES[type]} truncate`}
             >
               <span className="inline">{children}</span>
             </div>
@@ -41,7 +46,7 @@ export default function Message({ children, type = 'success', size = 'md' }) {
             >
               <span className="sr-only">Dismiss</span>
               <svg
-                className={`h-6 w-6 text-${messageType}-900`}
+                className={`h-6 w-6 ${TEXT_CLASSES[type]}`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
